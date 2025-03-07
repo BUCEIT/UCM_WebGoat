@@ -49,12 +49,17 @@ public class Servers {
   public List<Server> sort(@RequestParam String column) throws Exception {
     List<Server> servers = new ArrayList<>();
 
+    // List of allowed column names
+    List<String> allowedColumns = List.of("id", "hostname", "ip", "mac", "status", "description");
+
+    // Validate the column parameter
+    if (!allowedColumns.contains(column)) {
+      throw new IllegalArgumentException("Invalid column name: " + column);
+    }
+
     try (var connection = dataSource.getConnection()) {
-      try (var statement =
-          connection.prepareStatement(
-              "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out"
-                  + " of order' order by "
-                  + column)) {
+      String query = "select id, hostname, ip, mac, status, description from SERVERS where status <> 'out of order' order by " + column;
+      try (var statement = connection.prepareStatement(query)) {
         try (var rs = statement.executeQuery()) {
           while (rs.next()) {
             Server server =
